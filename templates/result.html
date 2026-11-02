@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Reward Status - Mylanchy Rewards</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: linear-gradient(135deg, #FDF4FF 0%, #FAE8FF 100%); color: #4A5568; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .card { background: #FFFFFF; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(147, 51, 234, 0.1); width: 100%; max-width: 380px; text-align: center; }
+        h2 { color: #7C3AED; margin-bottom: 8px; }
+        .amount-box { background: #FDF4FF; padding: 15px; border-radius: 10px; margin: 15px 0; border: 1px solid #D8B4FE; }
+        .reward-box { background: #FCE7F3; padding: 15px; border-radius: 10px; margin: 15px 0; border: 1px solid #F472B6; color: #DB2777; font-weight: bold; }
+        p { color: #6B7280; font-size: 13px; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>🎉 Success!</h2>
+        <div class="amount-box">
+            <p>Purchase Amount</p>
+            <h3 style="color: #7C3AED; margin: 5px 0;">₹{{ amount }}</h3>
+        </div>
+        <div class="reward-box">
+            <p style="color: #9D174D; margin: 0 0 5px 0;">Your Gift / Offer Status</p>
+            <span style="font-size: 18px;">{{ reward }}</span>
+        </div>
+        <p>Show this screen to the shop counter to claim your reward!</p>
+    </div>
+</body>
+</html>

@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Owner Dashboard - Mylanchy Rewards</title>
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #FDF4FF; color: #4A5568; padding: 20px; margin: 0; animation: fadeIn 0.4s ease-in-out; }
+        .container { max-width: 1000px; margin: auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 25px rgba(147, 51, 234, 0.1); position: relative; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #F3E8FF; padding-bottom: 15px; }
+        h2 { color: #7C3AED; margin: 0; font-size: 22px; }
+        
+        .header-right { display: flex; align-items: center; gap: 15px; position: relative; }
+        
+        .icon-btn { width: 42px; height: 42px; background: #F3E8FF; color: #7C3AED; border-radius: 50%; display: flex; justify-content: center; align-items: center; text-decoration: none; font-weight: bold; font-size: 18px; box-shadow: 0 3px 8px rgba(147, 51, 234, 0.15); transition: 0.2s; cursor: pointer; border: 1px solid #D8B4FE; }
+        .icon-btn:hover { background: #E9D5FF; transform: scale(1.05); }
+
+        .noti-badge { position: absolute; top: -5px; right: 185px; background: #EF4444; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; font-weight: bold; display: flex; justify-content: center; align-items: center; border: 2px solid white; transition: 0.3s ease; }
+
+        .noti-popup { display: none; position: absolute; top: 55px; right: 40px; width: 300px; background: white; border: 1px solid #D8B4FE; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); z-index: 1000; padding: 15px; box-sizing: border-box; animation: fadeIn 0.25s ease-in-out; }
+        .noti-popup-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #F3E8FF; padding-bottom: 8px; margin-bottom: 10px; }
+        .noti-popup-header h4 { margin: 0; color: #7C3AED; font-size: 15px; }
+
+        .noti-popup-list { max-height: 220px; overflow-y: auto; padding-right: 4px; }
+        .noti-popup-list::-webkit-scrollbar { width: 5px; }
+        .noti-popup-list::-webkit-scrollbar-thumb { background: #D8B4FE; border-radius: 10px; }
+        .noti-popup-list::-webkit-scrollbar-track { background: #FDF4FF; }
+
+        .noti-item { background: #FDF4FF; border: 1px solid #D8B4FE; padding: 10px 12px; border-radius: 8px; margin-bottom: 8px; font-size: 13px; }
+
+        .logo-preview { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid #7C3AED; }
+        
+        .tab-menu { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tab-btn { background: #E9D5FF; color: #7C3AED; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; transition: 0.2s; }
+        .tab-btn.active { background: #7C3AED; color: white; }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { padding: 12px; border-bottom: 1px solid #E5E7EB; text-align: left; font-size: 14px; }
+        th { background: #7C3AED; color: white; }
+        input[type="text"], input[type="number"] { padding: 9px 12px; border: 1px solid #D8B4FE; border-radius: 6px; width: 180px; outline: none; }
+        
+        .action-btn { background: #10B981; color: white; border: none; padding: 9px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; transition: 0.2s; }
+        .action-btn:hover { opacity: 0.9; }
+
+        .reject-btn { background: #FEE2E2; color: #EF4444; border: 1px solid #FCA5A5; padding: 9px 14px; border-radius: 6px; font-size: 13px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .reject-btn:hover { background: #EF4444; color: white; }
+
+        .bulk-bar { display: flex; gap: 12px; align-items: center; background: #F3E8FF; padding: 12px 18px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #D8B4FE; }
+        .no-data { text-align: center; color: #9CA3AF; padding: 30px; font-size: 14px; }
+        .logout-btn { background: #EF4444; color: white; padding: 8px 15px; border-radius: 8px; text-decoration: none; font-size: 13px; font-weight: bold; }
+        .logout-btn:hover { background: #DC2626; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>✨ Mylanchy Shop Owner Dashboard ✨</h2>
+            
+            <div class="header-right">
+                {% set pending_list = requests | selectattr('4', 'equalto', 'Pending') | list %}
+                {% set pending_count = pending_list | length %}
+                
+                {% if pending_count > 0 %}
+                    <div class="noti-badge" id="adminNotiBadge">{{ pending_count }}</div>
+                {% endif %}
+                <button type="button" class="icon-btn" onclick="toggleNotiPopup(event)" title="Pending Requests">🔔</button>
+
+                <a href="{{ url_for('admin_logout') }}" class="logout-btn">Logout</a>
+                <img src="https://via.placeholder.com/150" alt="Shop Logo" class="logo-preview">
+
+                <div id="notiPopup" class="noti-popup">
+                    <div class="noti-popup-header">
+                        <h4>Pending Approvals</h4>
+                        <button type="button" style="background: none; border: none; cursor: pointer; color: #EF4444; font-size: 12px; font-weight: bold;" onclick="clearAdminNotifications()">Clear All</button>
+                    </div>
+                    <div id="notiPopupList" class="noti-popup-list">
+                        {% if pending_list %}
+                            {% for req in pending_list %}
+                            <div class="noti-item" id="noti-item-{{ req[0] }}">
+                                <strong>{{ req[1] }} ({{ req[2] }})</strong>
+                                <p style="margin: 3px 0 0 0; color: #6B7280;">Bill Amount: <strong>₹{{ req[3] }}</strong></p>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <p style="text-align: center; color: #9CA3AF; font-size: 13px; margin: 10px 0;">No pending requests</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Navigation Menu -->
+        <div class="tab-menu">
+            <button class="tab-btn active" id="btn-pendingTab" onclick="switchTab('pendingTab', this)">⏳ Pending Approvals (<span id="adminPendingCount">{{ pending_count }}</span>)</button>
+            <button class="tab-btn" id="btn-approvedTab" onclick="switchTab('approvedTab', this)">🎁 Approved Offers & History</button>
+            <button class="tab-btn" id="btn-targetTab" onclick="switchTab('targetTab', this)">⚙️ Target Settings & Rewards</button>
+        </div>
+
+        <!-- TAB 1: Pending Approvals -->
+        <div id="pendingTab" class="tab-content">
+            <h3 style="color: #7C3AED; font-size: 16px; margin-bottom: 10px;">Pending Customer Requests</h3>
+            
+            {% if pending_list %}
+            <div class="bulk-bar" id="bulkBarContainer">
+                <input type="text" id="bulkOfferInput" class="bulk-input" placeholder="Enter Common Offer (e.g. 10% Off)" style="padding: 9px 12px; border: 1px solid #7C3AED; border-radius: 6px; width: 220px; outline: none;">
+                <button type="button" class="action-btn" onclick="applyBulkOffer()">Apply to All Selected</button>
+            </div>
+            {% endif %}
+
+            <table id="pendingTable">
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" id="selectAll" onclick="toggleSelectAll(this)"></th>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Phone</th>
+                        <th>Amount</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="pendingTableBody">
+                    {% if pending_list %}
+                        {% for req in pending_list %}
+                        <tr id="admin-row-{{ req[0] }}" data-name="{{ req[1] }}" data-phone="{{ req[2] }}" data-amount="{{ req[3] }}">
+                            <td><input type="checkbox" class="row-checkbox" value="{{ req[0] }}"></td>
+                            <td>#{{ req[0] }}</td>
+                            <td>{{ req[1] }}</td>
+                            <td>{{ req[2] }}</td>
+                            <td>₹{{ req[3] }}</td>
+                            <td>
+                                <div style="display: flex; gap: 8px; align-items: center;">
+                                    <form onsubmit="approveSingle(event, '{{ req[0] }}')" style="display: flex; gap: 6px; align-items: center; margin: 0;">
+                                        <input type="text" id="reward-{{ req[0] }}" placeholder="Enter Offer" required>
+                                        <button type="submit" class="action-btn">Approve</button>
+                                    </form>
+                                    <button type="button" class="reject-btn" onclick="rejectTxn('{{ req[0] }}')">Reject</button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr id="noPendingRow">
+                            <td colspan="6" class="no-data">No pending requests found!</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- TAB 2: Approved History -->
+        <div id="approvedTab" class="tab-content">
+            <h3 style="color: #7C3AED; font-size: 16px; margin-bottom: 10px;">Approved Offers & History</h3>
+            <table id="approvedTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Phone</th>
+                        <th>Amount</th>
+                        <th>Offer / Reward Details</th>
+                    </tr>
+                </thead>
+                <tbody id="approvedTableBody">
+                    {% set approved_list = requests | rejectattr('4', 'equalto', 'Pending') | list %}
+                    {% if approved_list %}
+                        {% for req in approved_list %}
+                        <tr>
+                            <td>#{{ req[0] }}</td>
+                            <td>{{ req[1] }}</td>
+                            <td>{{ req[2] }}</td>
+                            <td>₹{{ req[3] }}</td>
+                            <td><strong style="color: #10B981; font-size: 15px;">{{ req[4] }} ✔</strong></td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr id="noApprovedRow">
+                            <td colspan="5" class="no-data">No approved history found yet!</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- TAB 3: Target Settings & Rewards Page -->
+        <div id="targetTab" class="tab-content">
+            <h3 style="color: #7C3AED; font-size: 16px; margin-bottom: 15px;">⚙️ Target Goal Settings & Gift Assignment</h3>
+            
+            <div style="background: #FAF5FF; border: 1px solid #D8B4FE; padding: 20px; border-radius: 12px; margin-bottom: 25px;">
+                <form onsubmit="saveSettings(event)" style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap; margin: 0;">
+                    <label style="display: flex; align-items: center; gap: 8px; font-weight: bold; font-size: 14px; cursor: pointer;">
+                        <input type="checkbox" id="targetEnabled" name="target_enabled" value="1" {% if target_enabled == 1 %}checked{% endif %} style="width: 18px; height: 18px; accent-color: #7C3AED;"> Enable Target Goal
+                    </label>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <span style="font-size: 13px; color: #6B7280;">Target ₹:</span>
+                        <input type="number" id="targetAmount" name="target_amount" value="{{ target_amount }}" required step="any" style="width: 120px;">
+                    </div>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <span style="font-size: 13px; color: #6B7280;">Gift Name:</span>
+                        <input type="text" id="targetRewardName" name="target_reward_name" value="{{ target_reward_name }}" placeholder="e.g. Free Gift" required style="width: 180px;">
+                    </div>
+                    <button type="submit" class="action-btn">Save Settings</button>
+                </form>
+                <div id="settingsMsg" style="display: none; color: #10B981; font-size: 13px; font-weight: bold; margin-top: 10px;">Settings saved successfully!</div>
+            </div>
+
+            <h3 style="color: #7C3AED; font-size: 16px; margin-bottom: 10px;">🏆 Target Goal Completed Customers</h3>
+            <div id="targetReachedContainer">
+                {% if target_reached_users %}
+                <div style="background: #ECFDF5; border: 1px solid #A7F3D0; padding: 15px 20px; border-radius: 12px;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Customer Name</th>
+                                <th>Phone</th>
+                                <th>Total Spent</th>
+                                <th>Gift to Give</th>
+                                <th>Voucher Code & Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for ra in target_reached_users %}
+                            <tr id="admin-complete-row-{{ ra[1] }}">
+                                <td><strong>{{ ra[0] }}</strong></td>
+                                <td>{{ ra[1] }}</td>
+                                <td>₹{{ ra[2] | int }}</td>
+                                <td><strong style="color: #047857;">🎁 {{ target_reward_name }}</strong></td>
+                                <td>
+                                    <div style="display: flex; gap: 10px; align-items: center;">
+                                        <span style="background: #D1FAE5; color: #065F46; padding: 5px 10px; border-radius: 6px; font-size: 12px; font-weight: bold;">Code: {{ ra[3] }}</span>
+                                        <button type="button" class="action-btn" style="background: #0284C7;" onclick="markDelivered('{{ ra[1] }}')">Mark Delivered & Reset</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                    <p class="no-data" id="noTargetReachedMsg" style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px;">No customers have completed the target goal yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        window.onload = function() {
+            var savedTab = localStorage.getItem('admin_active_tab') || 'pendingTab';
+            var btn = document.getElementById('btn-' + savedTab);
+            if (btn) {
+                switchTab(savedTab, btn);
+            } else {
+                switchTab('pendingTab', document.getElementById('btn-pendingTab'));
+            }
+
+            let lastPendingCount = "{{ pending_count }}";
+            let clearedCount = localStorage.getItem('admin_cleared_pending_count');
+            let viewedCount = localStorage.getItem('admin_viewed_pending_count');
+
+            if (clearedCount === lastPendingCount) {
+                document.getElementById("notiPopupList").innerHTML = '<p style="text-align: center; color: #9CA3AF; font-size: 13px; margin: 10px 0;">No pending requests</p>';
+                let badge = document.getElementById("adminNotiBadge");
+                if (badge) badge.style.display = "none";
+            } else if (viewedCount === lastPendingCount) {
+                let badge = document.getElementById("adminNotiBadge");
+                if (badge) badge.style.display = "none";
+            }
+        };
+
+        function switchTab(tabId, btn) {
+            var tabs = document.getElementsByClassName("tab-content");
+            for (var i = 0; i < tabs.length; i++) {
+                tabs[i].classList.remove("active");
+            }
+            var buttons = document.getElementsByClassName("tab-btn");
+            for (var i = 0; i < buttons.length; i++) {
+                buttons[i].classList.remove("active");
+            }
+            document.getElementById(tabId).classList.add("active");
+            btn.classList.add("active");
+            localStorage.setItem('admin_active_tab', tabId);
+        }
+
+        function toggleSelectAll(source) {
+            checkboxes = document.getElementsByClassName('row-checkbox');
+            for(var i=0; i<checkboxes.length; i++) {
+                checkboxes[i].checked = source.checked;
+            }
+        }
+
+        function saveSettings(event) {
+            event.preventDefault();
+            let targetAmount = document.getElementById("targetAmount").value;
+            let targetRewardName = document.getElementById("targetRewardName").value;
+            let targetEnabledCheckbox = document.getElementById("targetEnabled");
+
+            let formData = new FormData();
+            formData.append("target_amount", targetAmount);
+            formData.append("target_reward_name", targetRewardName);
+            
+            if (targetEnabledCheckbox.checked) {
+                formData.append("target_enabled", "1");
+            }
+
+            fetch("/admin", {
+                method: "POST",
+                body: formData
+            }).then(response => {
+                if (response.ok) {
+                    let msg = document.getElementById("settingsMsg");
+                    msg.style.display = "block";
+                    setTimeout(() => { msg.style.display = "none"; }, 3000);
+                }
+            });
+        }
+
+        function markDelivered(phone) {
+            if (!confirm('Mark gift delivered and reset customer progress?')) return;
+            let formData = new FormData();
+            formData.append("complete_goal_phone", phone);
+
+            fetch("/admin", {
+                method: "POST",
+                body: formData
+            }).then(response => {
+                if (response.ok) {
+                    let row = document.getElementById("admin-complete-row-" + phone);
+                    if (row) {
+                        row.style.transition = "opacity 0.3s ease";
+                        row.style.opacity = "0";
+                        setTimeout(() => { row.remove(); }, 300);
+                    }
+                }
+            });
+        }
+
+        function approveSingle(event, txnId) {
+            event.preventDefault();
+            let rewardInput = document.getElementById("reward-" + txnId);
+            let reward = rewardInput.value;
+            let row = document.getElementById("admin-row-" + txnId);
+            
+            if (!row) return;
+            let name = row.getAttribute("data-name");
+            let phone = row.getAttribute("data-phone");
+            let amount = row.getAttribute("data-amount");
+
+            let formData = new FormData();
+            formData.append("txn_id", txnId);
+            formData.append("reward", reward);
+
+            fetch("/admin", {
+                method: "POST",
+                body: formData
+            }).then(response => {
+                if (response.ok) {
+                    // Remove from Pending Table & Notification popup
+                    row.style.transition = "opacity 0.3s ease";
+                    row.style.opacity = "0";
+                    setTimeout(() => { 
+                        row.remove(); 
+                        let notiItem = document.getElementById("noti-item-" + txnId);
+                        if (notiItem) notiItem.remove();
+                        updateCountsAfterAction();
+                        checkEmptyPending();
+                    }, 300);
+
+                    // Add to Approved Table Dynamically
+                    let approvedBody = document.getElementById("approvedTableBody");
+                    let noApprovedRow = document.getElementById("noApprovedRow");
+                    if (noApprovedRow) noApprovedRow.remove();
+
+                    let newApprovedRow = document.createElement("tr");
+                    newApprovedRow.innerHTML = `
+                        <td>#${txnId}</td>
+                        <td>${name}</td>
+                        <td>${phone}</td>
+                        <td>₹${amount}</td>
+                        <td><strong style="color: #10B981; font-size: 15px;">${reward} ✔</strong></td>
+                    `;
+                    approvedBody.prepend(newApprovedRow);
+                }
+            });
+        }
+
+        function applyBulkOffer() {
+            let commonReward = document.getElementById("bulkOfferInput").value.trim();
+            if (!commonReward) {
+                alert("Please enter an offer name first!");
+                return;
+            }
+            let checkboxes = document.getElementsByClassName('row-checkbox');
+            let selectedIds = [];
+            for (let i = 0; i < checkboxes.length; i++) {
+                if (checkboxes[i].checked) {
+                    selectedIds.push(checkboxes[i].value);
+                }
+            }
+            if (selectedIds.length === 0) {
+                alert("Please select at least one customer request!");
+                return;
+            }
+            let promises = selectedIds.map(txnId => {
+                let formData = new FormData();
+                formData.append("txn_id", txnId);
+                formData.append("reward", commonReward);
+                return fetch("/admin", { method: "POST", body: formData }).then(() => {
+                    let row = document.getElementById("admin-row-" + txnId);
+                    if (row) {
+                        let name = row.getAttribute("data-name");
+                        let phone = row.getAttribute("data-phone");
+                        let amount = row.getAttribute("data-amount");
+
+                        row.remove();
+                        let notiItem = document.getElementById("noti-item-" + txnId);
+                        if (notiItem) notiItem.remove();
+
+                        // Add to Approved Table
+                        let approvedBody = document.getElementById("approvedTableBody");
+                        let noApprovedRow = document.getElementById("noApprovedRow");
+                        if (noApprovedRow) noApprovedRow.remove();
+
+                        let newApprovedRow = document.createElement("tr");
+                        newApprovedRow.innerHTML = `
+                            <td>#${txnId}</td>
+                            <td>${name}</td>
+                            <td>${phone}</td>
+                            <td>₹${amount}</td>
+                            <td><strong style="color: #10B981; font-size: 15px;">${commonReward} ✔</strong></td>
+                        `;
+                        approvedBody.prepend(newApprovedRow);
+                    }
+                });
+            });
+            Promise.all(promises).then(() => {
+                updateCountsAfterAction(selectedIds.length);
+                checkEmptyPending();
+            });
+        }
+
+        function rejectTxn(txnId) {
+            fetch("/admin/delete_txn/" + txnId, {
+                method: "POST"
+            }).then(response => {
+                if (response.ok) {
+                    let row = document.getElementById("admin-row-" + txnId);
+                    if (row) {
+                        row.style.transition = "opacity 0.3s ease";
+                        row.style.opacity = "0";
+                        setTimeout(() => { 
+                            row.remove(); 
+                            let notiItem = document.getElementById("noti-item-" + txnId);
+                            if (notiItem) notiItem.remove();
+                            updateCountsAfterAction();
+                            checkEmptyPending();
+                        }, 300);
+                    }
+                }
+            });
+        }
+
+        function updateCountsAfterAction(decrement = 1) {
+            let countEl = document.getElementById("adminPendingCount");
+            if (countEl) {
+                let currentCount = parseInt(countEl.innerText) || 1;
+                let newCount = Math.max(0, currentCount - decrement);
+                countEl.innerText = newCount;
+                let badge = document.getElementById("adminNotiBadge");
+                if (badge) {
+                    if (newCount === 0) badge.style.display = "none";
+                    else {
+                        badge.style.display = "flex";
+                        badge.innerText = newCount;
+                    }
+                }
+            }
+        }
+
+        function checkEmptyPending() {
+            let pendingBody = document.getElementById("pendingTableBody");
+            if (pendingBody.children.length === 0) {
+                let bulkBar = document.getElementById("bulkBarContainer");
+                if (bulkBar) bulkBar.style.display = "none";
+                pendingBody.innerHTML = `<tr id="noPendingRow"><td colspan="6" class="no-data">No pending requests found!</td></tr>`;
+            }
+        }
+
+        function toggleNotiPopup(event) {
+            if (event) event.stopPropagation();
+            var popup = document.getElementById("notiPopup");
+            if (popup.style.display !== "block") {
+                popup.style.display = "block";
+                let currentPendingCount = document.getElementById("adminPendingCount").innerText;
+                localStorage.setItem('admin_viewed_pending_count', currentPendingCount);
+                let badge = document.getElementById("adminNotiBadge");
+                if (badge) badge.style.display = "none";
+            } else {
+                popup.style.display = "none";
+            }
+        }
+
+        function clearAdminNotifications() {
+            document.getElementById("notiPopupList").innerHTML = '<p style="text-align: center; color: #9CA3AF; font-size: 13px; margin: 10px 0;">No pending requests</p>';
+            let badge = document.getElementById("adminNotiBadge");
+            if (badge) badge.style.display = "none";
+            let currentPendingCount = document.getElementById("adminPendingCount").innerText;
+            localStorage.setItem('admin_cleared_pending_count', currentPendingCount);
+            localStorage.setItem('admin_viewed_pending_count', currentPendingCount);
+        }
+
+        window.onclick = function(event) {
+            var popup = document.getElementById("notiPopup");
+            if (popup && popup.style.display === "block" && !event.target.closest('#notiPopup') && !event.target.closest('button[onclick*="toggleNotiPopup"]')) {
+                popup.style.display = "none";
+            }
+        }
+    </script>
+</body>
+</html>

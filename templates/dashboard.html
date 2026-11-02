@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard - Mylanchy Rewards</title>
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: linear-gradient(135deg, #FDF4FF 0%, #FAE8FF 100%); color: #4A5568; padding: 20px; margin: 0; min-height: 100vh; box-sizing: border-box; }
+        .container { max-width: 900px; margin: auto; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(147, 51, 234, 0.15); position: relative; animation: fadeIn 0.4s ease-in-out; }
+        
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 2px solid #F3E8FF; padding-bottom: 15px; }
+        h2 { color: #7C3AED; margin: 0; font-size: 24px; }
+        
+        .header-right { display: flex; align-items: center; gap: 15px; position: relative; }
+        
+        .icon-btn { width: 42px; height: 42px; background: #F3E8FF; color: #7C3AED; border-radius: 50%; display: flex; justify-content: center; align-items: center; text-decoration: none; font-weight: bold; font-size: 18px; box-shadow: 0 3px 8px rgba(147, 51, 234, 0.15); transition: all 0.3s ease; cursor: pointer; border: 1px solid #D8B4FE; }
+        .icon-btn:hover { background: #E9D5FF; transform: scale(1.08); }
+
+        .noti-badge { position: absolute; top: -5px; right: 52px; background: #EF4444; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; font-weight: bold; display: flex; justify-content: center; align-items: center; border: 2px solid white; transition: 0.3s ease; }
+
+        .noti-popup { display: none; position: absolute; top: 55px; right: 40px; width: 300px; background: white; border: 1px solid #D8B4FE; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); z-index: 1000; padding: 15px; box-sizing: border-box; animation: fadeIn 0.25s ease-in-out; }
+        .noti-popup-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #F3E8FF; padding-bottom: 8px; margin-bottom: 10px; }
+        .noti-popup-header h4 { margin: 0; color: #7C3AED; font-size: 15px; }
+
+        .noti-popup-list { max-height: 220px; overflow-y: auto; padding-right: 4px; }
+        .noti-popup-list::-webkit-scrollbar { width: 5px; }
+        .noti-popup-list::-webkit-scrollbar-thumb { background: #D8B4FE; border-radius: 10px; }
+        .noti-popup-list::-webkit-scrollbar-track { background: #FDF4FF; }
+
+        .noti-item { background: #FDF4FF; border: 1px solid #D8B4FE; padding: 10px 12px; border-radius: 8px; margin-bottom: 8px; font-size: 13px; }
+
+        .progress-card { background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 15px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+        .progress-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-weight: bold; font-size: 14px; color: #4A5568; }
+        .progress-bar-bg { width: 100%; height: 22px; background: #E2E8F0; border-radius: 12px; overflow: hidden; position: relative; box-shadow: inset 0 2px 4px rgba(0,0,0,0.06); }
+        .progress-bar-fill { height: 100%; width: 0%; transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1); border-radius: 12px; }
+
+        .side-drawer { height: 100%; width: 0; position: fixed; z-index: 2000; top: 0; right: 0; background-color: #FFFFFF; overflow-x: hidden; transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: -5px 0 25px rgba(0,0,0,0.15); padding-top: 60px; box-sizing: border-box; }
+        .side-drawer-content { padding: 20px; width: 300px; }
+        .close-drawer { position: absolute; top: 20px; right: 20px; font-size: 22px; background: none; border: none; cursor: pointer; color: #6B7280; font-weight: bold; transition: 0.2s; }
+        .close-drawer:hover { color: #EF4444; }
+        .drawer-item { display: block; width: 100%; padding: 12px 15px; margin-bottom: 10px; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; text-align: left; font-size: 15px; font-weight: bold; color: #4A5568; cursor: pointer; text-decoration: none; transition: all 0.25s ease; box-sizing: border-box; }
+        .drawer-item:hover { background: #F3E8FF; color: #7C3AED; border-color: #D8B4FE; transform: translateX(-3px); }
+        .drawer-logout { background: #FEE2E2; color: #EF4444; border-color: #FCA5A5; text-align: center; }
+        .drawer-logout:hover { background: #EF4444; color: white; transform: none; }
+
+        .card-window { background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 15px; padding: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); transition: 0.3s ease; margin-bottom: 20px; }
+        .card-window h3 { color: #7C3AED; margin-top: 0; font-size: 18px; display: flex; align-items: center; gap: 8px; }
+
+        .purchase-form { display: flex; flex-direction: column; gap: 12px; margin-top: 15px; }
+        input[type="number"] { width: 100%; padding: 12px; border: 1px solid #D8B4FE; border-radius: 8px; font-size: 15px; outline: none; box-sizing: border-box; transition: all 0.3s ease; }
+        input[type="number"]:focus { border-color: #EC4899; box-shadow: 0 0 8px rgba(236, 72, 153, 0.3); }
+        button.submit-btn { background: linear-gradient(135deg, #9333EA 0%, #EC4899 100%); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 15px; transition: all 0.3s ease; }
+        button.submit-btn:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(147, 51, 234, 0.25); }
+
+        .summary-box { flex: 1; background: white; padding: 18px; border-radius: 12px; text-align: center; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 10px rgba(0,0,0,0.03); }
+        .summary-box:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(147, 51, 234, 0.12); border-color: #7C3AED !important; }
+
+        .page-view { display: none; animation: fadeIn 0.35s ease-in-out; }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #F3E8FF; padding-bottom: 12px; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 12px; border-bottom: 1px solid #E5E7EB; text-align: left; font-size: 14px; }
+        th { background: #7C3AED; color: white; }
+        .reward-badge { background: #FCE7F3; color: #DB2777; padding: 6px 12px; border-radius: 6px; font-weight: bold; font-size: 13px; display: inline-block; }
+        
+        .delete-btn { background: #FEE2E2; color: #EF4444; border: 1px solid #FCA5A5; padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; transition: all 0.2s ease; }
+        .delete-btn:hover { background: #EF4444; color: white; transform: scale(1.05); }
+        
+        .no-data { text-align: center; color: #9CA3AF; padding: 25px; }
+        .back-btn { background: #7C3AED; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 13px; transition: 0.2s; }
+        .back-btn:hover { opacity: 0.9; }
+        
+        #successMsg { display: none; color: #10B981; font-size: 13px; font-weight: bold; margin-top: 8px; text-align: center; animation: fadeIn 0.3s ease; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <h2>Welcome, {{ user_name }}!</h2>
+            </div>
+            <div class="header-right">
+                {% set approved_txns = transactions | rejectattr('2', 'equalto', 'Pending') | list %}
+                {% set approved_count = approved_txns | length %}
+                
+                {% if approved_count > 0 %}
+                    <div class="noti-badge" id="notiBadge">{{ approved_count }}</div>
+                {% endif %}
+                <button type="button" class="icon-btn" onclick="toggleNotiPopup(event)">🔔</button>
+                <button type="button" class="icon-btn" onclick="openDrawer(event)">👤</button>
+
+                <div id="notiPopup" class="noti-popup">
+                    <div class="noti-popup-header">
+                        <h4>Notifications</h4>
+                        <button type="button" style="background: none; border: none; cursor: pointer; color: #EF4444; font-size: 12px; font-weight: bold;" onclick="clearNotifications()">Clear All</button>
+                    </div>
+                    <div id="notiPopupList" class="noti-popup-list">
+                        {% if approved_txns %}
+                            {% for txn in approved_txns %}
+                            <div class="noti-item">
+                                <strong>Offer Approved! 🎉</strong>
+                                <p style="margin: 3px 0 0 0; color: #6B7280;">₹{{txn[1]}} - <strong>{{ txn[2] }}</strong></p>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <p style="text-align: center; color: #9CA3AF; font-size: 13px; margin: 10px 0;">No new notifications</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loyalty Progress Bar (Only shown if target_enabled == 1) -->
+        {% if target_enabled == 1 %}
+            {% set spent = total_spent | float %}
+            {% set target = target_amount | float %}
+            {% set percentage = (spent / target * 100) if target > 0 else 0 %}
+            {% if percentage > 100 %}{% set percentage = 100 %}{% endif %}
+            {% set is_completed = spent >= target %}
+
+            <div class="progress-card" id="progressCardContainer">
+                <div class="progress-header">
+                    <span id="progressText">🎯 Target Goal Progress: ₹{{ spent | int }} / ₹{{ target | int }}</span>
+                    <span id="progressPercentageText">{{ percentage | int }}%</span>
+                </div>
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill" id="progressBarFill" style="width: {{ percentage }}%; background: {% if is_completed %}#10B981{% else %}#EF4444{% endif %};"></div>
+                </div>
+                
+                <div id="targetCompleteBox" style="margin-top: 12px; padding: 15px; background: #ECFDF5; border: 1px solid #A7F3D0; border-radius: 8px; text-align: center; display: {% if is_completed %}block{% else %}none{% endif %};">
+                    <p style="margin: 0; color: #065F46; font-size: 15px; font-weight: bold;">🎉 Target Completed! Reward: {{ target_reward_name }}</p>
+                    <p style="margin: 6px 0 0 0; font-size: 13px; color: #047857;">Your Voucher Code: <strong id="voucherCodeDisplay" style="background: #D1FAE5; padding: 3px 8px; border-radius: 4px; font-size: 14px;">{{ coupon_code }}</strong></p>
+                    <p style="margin: 4px 0 0 0; font-size: 11px; color: #065F46;">Show this code at the shop to claim your gift.</p>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Side Drawer Menu -->
+        <div id="sideDrawer" class="side-drawer">
+            <div class="side-drawer-content">
+                <button type="button" class="close-drawer" onclick="closeDrawer()">✕</button>
+                <h3 style="color: #7C3AED; margin-top: 0; margin-bottom: 20px;">Menu</h3>
+                
+                <button type="button" class="drawer-item" onclick="switchView('approvedView')">🎁 Approved Offers</button>
+                <button type="button" class="drawer-item" onclick="switchView('pendingView')">⏳ Pending Requests</button>
+                <button type="button" class="drawer-item" onclick="switchView('historyView')">🛍️ Detailed Purchase History</button>
+                <a href="{{ url_for('logout') }}" class="drawer-item drawer-logout">🚪 Logout</a>
+            </div>
+        </div>
+
+        <!-- VIEW 1: Main Dashboard -->
+        <div id="mainDashboardView">
+            <div class="card-window">
+                <h3>💰 Enter Purchase Amount</h3>
+                <p style="font-size: 13px; color: #6B7280; margin-bottom: 15px;">Enter your bill amount after purchasing from the shop.</p>
+                <form id="purchaseForm" class="purchase-form" onsubmit="submitAmount(event)">
+                    <input type="number" id="amountInput" name="amount" placeholder="Enter amount (e.g. 500)" required step="any">
+                    <button type="submit" class="submit-btn">Submit Amount</button>
+                    <div id="successMsg">Amount submitted successfully! (Pending)</div>
+                </form>
+            </div>
+
+            <!-- Front Page Summary Cards -->
+            <div class="card-window" style="background: #FAF5FF;">
+                <h3>🎁 Your Rewards Summary</h3>
+                <p style="font-size: 13px; color: #6B7280; margin-bottom: 15px;">Click below to view details.</p>
+                
+                {% set pending_count = transactions | selectattr('2', 'equalto', 'Pending') | list | length %}
+                
+                <div style="display: flex; gap: 15px; margin-top: 15px;">
+                    <div class="summary-box" style="border: 1px solid #D8B4FE;" onclick="switchView('approvedView')">
+                        <span style="font-size: 11px; color: #7C3AED; font-weight: bold;">APPROVED OFFERS</span>
+                        <h4 style="color: #7C3AED; margin: 5px 0 0 0; font-size: 22px;">{{ approved_count }}</h4>
+                    </div>
+                    <div class="summary-box" style="border: 1px solid #FCA5A5;" onclick="switchView('pendingView')">
+                        <span style="font-size: 11px; color: #EF4444; font-weight: bold;">PENDING</span>
+                        <h4 style="color: #EF4444; margin: 5px 0 0 0; font-size: 22px;" id="pendingCountDisplay">{{ pending_count }}</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW 2: Approved Offers Page -->
+        <div class="page-view" id="approvedView">
+            <div class="page-header">
+                <h3 style="color: #7C3AED; margin: 0; font-size: 18px;">🎁 Approved Offers</h3>
+                <button type="button" class="back-btn" onclick="goHome()">← Back Home</button>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Date & Time</th>
+                        <th>Amount</th>
+                        <th>Offer / Reward Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% set approved_list = transactions | rejectattr('2', 'equalto', 'Pending') | list %}
+                    {% if approved_list %}
+                        {% for txn in approved_list %}
+                        <tr>
+                            <td>#{{ txn[0] }}</td>
+                            <td style="font-size: 13px; color: #6B7280;">{{ txn[3] }}</td>
+                            <td style="font-weight: bold; color: #1F2937;">₹{{ txn[1] }}</td>
+                            <td><span class="reward-badge">{{ txn[2] }} ✔</span></td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="4" class="no-data">No approved offers found!</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- VIEW 3: Pending Requests Page -->
+        <div class="page-view" id="pendingView">
+            <div class="page-header">
+                <h3 style="color: #7C3AED; margin: 0; font-size: 18px;">⏳ Pending Requests</h3>
+                <button type="button" class="back-btn" onclick="goHome()">← Back Home</button>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Date & Time</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="pendingTableBody">
+                    {% set pending_list = transactions | selectattr('2', 'equalto', 'Pending') | list %}
+                    {% if pending_list %}
+                        {% for txn in pending_list %}
+                        <tr id="row-{{ txn[0] }}" data-amount="{{ txn[1] }}">
+                            <td>#{{ txn[0] }}</td>
+                            <td style="font-size: 13px; color: #6B7280;">{{ txn[3] }}</td>
+                            <td style="font-weight: bold; color: #1F2937;">₹{{ txn[1] }}</td>
+                            <td><span class="reward-badge" style="background: #FEF3C7; color: #D97706;">{{ txn[2] }}</span></td>
+                            <td>
+                                <button type="button" class="delete-btn" onclick="deleteTxn('{{ txn[0] }}')">Delete</button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr id="emptyPendingRow">
+                            <td colspan="5" class="no-data">No pending requests found!</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- VIEW 4: Detailed Purchase History Page -->
+        <div class="page-view" id="historyView">
+            <div class="page-header">
+                <h3 style="color: #7C3AED; margin: 0; font-size: 18px;">🛍️ Detailed Purchase History</h3>
+                <button type="button" class="back-btn" onclick="goHome()">← Back Home</button>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Date & Time</th>
+                        <th>Amount</th>
+                        <th>Offer / Reward Details</th>
+                    </tr>
+                </thead>
+                <tbody id="historyTableBody">
+                    {% if transactions %}
+                        {% for txn in transactions %}
+                        <tr id="history-row-{{ txn[0] }}">
+                            <td>#{{ txn[0] }}</td>
+                            <td style="font-size: 13px; color: #6B7280;">{{ txn[3] }}</td>
+                            <td style="font-weight: bold; color: #1F2937;">₹{{ txn[1] }}</td>
+                            <td>
+                                {% if txn[2] == 'Pending' %}
+                                    <span style="font-size: 12px; color: #D97706; font-weight: bold;" class="status-text">Pending ⏳</span>
+                                {% else %}
+                                    <span class="reward-badge">{{ txn[2] }} ✔</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="4" class="no-data">You haven't made any purchases yet!</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let currentSpent = parseFloat("{{ total_spent | default(0) }}");
+        let targetAmount = parseFloat("{{ target_amount | default(5000) }}");
+        let targetEnabled = parseInt("{{ target_enabled | default(1) }}");
+
+        window.onload = function() {
+            let lastApprovedCount = "{{ approved_count }}";
+            let clearedCount = localStorage.getItem('cleared_approved_count');
+            let viewedCount = localStorage.getItem('viewed_approved_count');
+
+            if (clearedCount === lastApprovedCount) {
+                document.getElementById("notiPopupList").innerHTML = '<p style="text-align: center; color: #9CA3AF; font-size: 13px; margin: 10px 0;">No new notifications</p>';
+                let badge = document.getElementById("notiBadge");
+                if (badge) badge.style.display = "none";
+            } else if (viewedCount === lastApprovedCount) {
+                let badge = document.getElementById("notiBadge");
+                if (badge) badge.style.display = "none";
+            }
+        };
+
+        function updateProgressUI(addedAmount, generatedCoupon = "") {
+            if (targetEnabled !== 1) return;
+            currentSpent += parseFloat(addedAmount);
+            let percentage = (currentSpent / targetAmount) * 100;
+            if (percentage > 100) percentage = 100;
+
+            let progressText = document.getElementById("progressText");
+            let percentageText = document.getElementById("progressPercentageText");
+            let progressBarFill = document.getElementById("progressBarFill");
+            let completeBox = document.getElementById("targetCompleteBox");
+            let voucherDisplay = document.getElementById("voucherCodeDisplay");
+
+            if (progressText) progressText.innerText = `🎯 Target Goal Progress: ₹${Math.floor(currentSpent)} / ₹${Math.floor(targetAmount)}`;
+            if (percentageText) percentageText.innerText = `${Math.floor(percentage)}%`;
+            
+            if (progressBarFill) {
+                progressBarFill.style.width = percentage + "%";
+                if (currentSpent >= targetAmount) {
+                    progressBarFill.style.background = "#10B981";
+                    if (completeBox) completeBox.style.display = "block";
+                    if (generatedCoupon && voucherDisplay) {
+                        voucherDisplay.innerText = generatedCoupon;
+                    }
+                } else {
+                    progressBarFill.style.background = "#EF4444";
+                    if (completeBox) completeBox.style.display = "none";
+                }
+            }
+        }
+
+        function submitAmount(event) {
+            event.preventDefault();
+            let amountInput = document.getElementById("amountInput");
+            let amount = parseFloat(amountInput.value);
+            if (isNaN(amount) || amount <= 0) return;
+
+            let formData = new FormData();
+            formData.append("amount", amount);
+
+            fetch("/dashboard", {
+                method: "POST",
+                body: formData
+            }).then(response => response.json()).then(data => {
+                if (data.status === "success") {
+                    amountInput.value = "";
+                    let msg = document.getElementById("successMsg");
+                    msg.style.display = "block";
+                    setTimeout(() => { msg.style.display = "none"; }, 3000);
+
+                    // Update Progress Bar & Instant Voucher Display
+                    updateProgressUI(amount, data.coupon);
+
+                    // Update Pending Count Live
+                    let countEl = document.getElementById("pendingCountDisplay");
+                    if (countEl) {
+                        let currentCount = parseInt(countEl.innerText) || 0;
+                        countEl.innerText = currentCount + 1;
+                    }
+
+                    // Dynamically add to Pending Table
+                    let pendingTable = document.getElementById("pendingTableBody");
+                    let emptyRow = document.getElementById("emptyPendingRow");
+                    if (emptyRow) emptyRow.remove();
+
+                    let dummyId = "temp-" + Date.now();
+                    let newRow = document.createElement("tr");
+                    newRow.id = "row-" + dummyId;
+                    newRow.setAttribute("data-amount", amount);
+                    newRow.innerHTML = `
+                        <td>#New</td>
+                        <td style="font-size: 13px; color: #6B7280;">Just now</td>
+                        <td style="font-weight: bold; color: #1F2937;">₹${amount}</td>
+                        <td><span class="reward-badge" style="background: #FEF3C7; color: #D97706;">Pending</span></td>
+                        <td>
+                            <button type="button" class="delete-btn" onclick="deleteTxn('${dummyId}')">Delete</button>
+                        </td>
+                    `;
+                    pendingTable.prepend(newRow);
+                }
+            });
+        }
+
+        function deleteTxn(txnId) {
+            let row = document.getElementById("row-" + txnId);
+            let txnAmount = 0;
+            if (row) {
+                txnAmount = parseFloat(row.getAttribute("data-amount")) || 0;
+            }
+
+            let fetchCall = txnId.toString().startsWith("temp-") ? Promise.resolve(new Response()) : fetch("/delete_txn/" + txnId, { method: "POST" });
+
+            fetchCall.then(response => {
+                if (response.ok) {
+                    if (row) {
+                        row.style.transition = "opacity 0.3s ease";
+                        row.style.opacity = "0";
+                        setTimeout(() => { 
+                            row.remove(); 
+                            let countEl = document.getElementById("pendingCountDisplay");
+                            if (countEl) {
+                                let currentCount = parseInt(countEl.innerText) || 1;
+                                let newCount = Math.max(0, currentCount - 1);
+                                countEl.innerText = newCount;
+                            }
+                            if (txnAmount > 0) {
+                                updateProgressUI(-txnAmount);
+                            }
+                        }, 300);
+                    }
+                }
+            });
+        }
+
+        function toggleNotiPopup(event) {
+            if (event) event.stopPropagation();
+            var popup = document.getElementById("notiPopup");
+            if (popup.style.display !== "block") {
+                popup.style.display = "block";
+                let currentApprovedCount = "{{ approved_count }}";
+                localStorage.setItem('viewed_approved_count', currentApprovedCount);
+                let badge = document.getElementById("notiBadge");
+                if (badge) badge.style.display = "none";
+            } else {
+                popup.style.display = "none";
+            }
+        }
+
+        function clearNotifications() {
+            document.getElementById("notiPopupList").innerHTML = '<p style="text-align: center; color: #9CA3AF; font-size: 13px; margin: 10px 0;">No new notifications</p>';
+            let badge = document.getElementById("notiBadge");
+            if (badge) badge.style.display = "none";
+            let currentApprovedCount = "{{ approved_count }}";
+            localStorage.setItem('cleared_approved_count', currentApprovedCount);
+            localStorage.setItem('viewed_approved_count', currentApprovedCount);
+        }
+
+        function openDrawer(event) {
+            if (event) event.stopPropagation();
+            document.getElementById("sideDrawer").style.width = "280px";
+        }
+
+        function closeDrawer() {
+            document.getElementById("sideDrawer").style.width = "0";
+        }
+
+        function switchView(viewId) {
+            closeDrawer();
+            document.getElementById("mainDashboardView").style.display = "none";
+            document.getElementById("approvedView").style.display = "none";
+            document.getElementById("pendingView").style.display = "none";
+            document.getElementById("historyView").style.display = "none";
+
+            document.getElementById(viewId).style.display = "block";
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function goHome() {
+            document.getElementById("approvedView").style.display = "none";
+            document.getElementById("pendingView").style.display = "none";
+            document.getElementById("historyView").style.display = "none";
+            document.getElementById("mainDashboardView").style.display = "block";
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        window.onclick = function(event) {
+            var drawer = document.getElementById("sideDrawer");
+            if (drawer.style.width === "280px" && !event.target.closest('#sideDrawer') && !event.target.closest('button[onclick*="openDrawer"]')) {
+                closeDrawer();
+            }
+            var popup = document.getElementById("notiPopup");
+            if (popup && popup.style.display === "block" && !event.target.closest('#notiPopup') && !event.target.closest('button[onclick*="toggleNotiPopup"]')) {
+                popup.style.display = "none";
+            }
+        }
+    </script>
+</body>
+</html>
