@@ -520,6 +520,29 @@
                 popup.style.display = "none";
             }
         }
+
+
+        // Auto-sync: check for server-side changes without manual refresh.
+        (function () {
+            let lastServerVersion = null;
+            async function checkAdminUpdates() {
+                if (document.hidden) return;
+                if (document.activeElement && document.activeElement.matches('input, textarea, select')) return;
+                try {
+                    const response = await fetch(window.location.href, { method: 'GET', cache: 'no-store', headers: { 'X-Requested-With': 'auto-sync' } });
+                    if (!response.ok) return;
+                    const html = await response.text();
+                    const parsed = new DOMParser().parseFromString(html, 'text/html');
+                    const serverContainer = parsed.querySelector('.container');
+                    if (!serverContainer) return;
+                    const version = serverContainer.innerHTML;
+                    if (lastServerVersion === null) lastServerVersion = version;
+                    else if (version !== lastServerVersion) window.location.reload();
+                } catch (error) { console.warn('Admin auto-sync check failed:', error); }
+            }
+            window.addEventListener('load', () => { checkAdminUpdates(); window.setInterval(checkAdminUpdates, 4000); });
+        })();
+
     </script>
 </body>
 </html>

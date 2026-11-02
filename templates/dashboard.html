@@ -493,6 +493,45 @@
                 popup.style.display = "none";
             }
         }
+
+
+        // Auto-sync: check for admin/customer changes without manual refresh.
+        (function () {
+            let lastServerVersion = null;
+            async function checkDashboardUpdates() {
+                if (document.hidden) return;
+                if (document.activeElement && document.activeElement.matches('input, textarea, select')) return;
+                try {
+                    const response = await fetch(window.location.href, { method: 'GET', cache: 'no-store', headers: { 'X-Requested-With': 'auto-sync' } });
+                    if (!response.ok) return;
+                    const html = await response.text();
+                    const parsed = new DOMParser().parseFromString(html, 'text/html');
+                    const serverContainer = parsed.querySelector('.container');
+                    if (!serverContainer) return;
+                    const version = serverContainer.innerHTML;
+                    if (lastServerVersion === null) lastServerVersion = version;
+                    else if (version !== lastServerVersion) {
+                        const activeView = ['approvedView', 'pendingView', 'historyView'].find(id => {
+                            const el = document.getElementById(id);
+                            return el && el.style.display === 'block';
+                        }) || 'mainDashboardView';
+                        sessionStorage.setItem('mylanchy_active_view', activeView);
+                        window.location.reload();
+                    }
+                } catch (error) { console.warn('Dashboard auto-sync check failed:', error); }
+            }
+            window.addEventListener('load', () => {
+                const savedView = sessionStorage.getItem('mylanchy_active_view');
+                if (savedView) {
+                    sessionStorage.removeItem('mylanchy_active_view');
+                    if (savedView === 'mainDashboardView') goHome();
+                    else if (document.getElementById(savedView)) switchView(savedView);
+                }
+                checkDashboardUpdates();
+                window.setInterval(checkDashboardUpdates, 4000);
+            });
+        })();
+
     </script>
 </body>
 </html>
